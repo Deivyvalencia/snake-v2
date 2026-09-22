@@ -10,12 +10,12 @@ import pygame
 
 pygame.init()
 
-WIDTH, HEIGHT = 1280, 840
-BOARD = 704
-CELL = 44
+WIDTH, HEIGHT = 1440, 920
+BOARD = 800
+CELL = 50
 GRID = 16
 FPS = 60
-BOARD_X, BOARD_Y = 32, 78
+BOARD_X, BOARD_Y = 40, 60
 FOOD_COUNT = 4
 FOOD_LIFETIME = 8.0
 PROGRESS_FILE = os.path.join(os.path.expanduser("~"), ".snakerson_progress.json")
@@ -236,14 +236,14 @@ class Game:
         elif self.state == "stats" and pygame.Rect(40, 760, 190, 54).collidepoint(position):
             self.state = "menu"
         elif self.state == "result":
-            if pygame.Rect(585, 420, 300, 48).collidepoint(position):
+            if pygame.Rect(950, 500, 400, 56).collidepoint(position):
                 if self.mode == "free":
                     self.start_free_mode()
                 else:
                     self.start_level(self.level_id)
-            elif pygame.Rect(585, 480, 300, 48).collidepoint(position):
+            elif pygame.Rect(950, 565, 400, 56).collidepoint(position):
                 self.state = "menu"
-            elif self.next_level and pygame.Rect(585, 540, 300, 48).collidepoint(position):
+            elif self.next_level and pygame.Rect(950, 630, 400, 56).collidepoint(position):
                 self.start_level(self.next_level)
 
     def start_level(self, level_id):
@@ -514,18 +514,18 @@ class Game:
         overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         overlay.fill((5, 9, 14, 185))
         self.screen.blit(overlay, (0, 0))
-        box = pygame.Rect(535, 110, 370, 470)
+        box = pygame.Rect(900, 120, 500, 650)
         pygame.draw.rect(self.screen, PANEL, box, border_radius=12)
         color = GREEN if self.result_won else RED
         result_title = "SNAKE FREE COMPLETADO" if self.result_won and self.mode == "free" else "NIVEL SUPERADO" if self.result_won else "GAME OVER"
-        self.text(result_title, self.font_heading, color, (585, 145))
-        self.text(self.result_reason, self.font_body, WHITE, (585, 205))
-        self.text(f"Alimentos: {self.food_count}", self.font_body, MUTED, (585, 250))
-        self.text(f"Puntaje: {self.score}", self.font_body, WHITE, (585, 280))
-        self.button(pygame.Rect(585, 420, 300, 48), "REPETIR PARTIDA", color)
-        self.button(pygame.Rect(585, 480, 300, 48), "MENU PRINCIPAL", PANEL_LIGHT)
+        self.text(result_title, self.font_heading, color, (940, 170))
+        self.text(self.result_reason, self.font_body, WHITE, (940, 240))
+        self.text(f"Alimentos: {self.food_count}", self.font_body, MUTED, (940, 290))
+        self.text(f"Puntaje: {self.score}", self.font_body, WHITE, (940, 330))
+        self.button(pygame.Rect(950, 500, 400, 56), "REPETIR PARTIDA", color)
+        self.button(pygame.Rect(950, 565, 400, 56), "MENU PRINCIPAL", PANEL_LIGHT)
         if self.next_level:
-            self.button(pygame.Rect(585, 540, 300, 48), "SIGUIENTE NIVEL", GOLD)
+            self.button(pygame.Rect(950, 630, 400, 56), "SIGUIENTE NIVEL", GOLD)
 
 
 def main():

@@ -12,14 +12,14 @@ import pygame
 os.environ.setdefault("SDL_VIDEO_CENTERED", "1")
 pygame.init()
 
-GAME_WIDTH, GAME_HEIGHT = 800, 800
+GAME_WIDTH, GAME_HEIGHT = 1280, 720
 MENU_WIDTH, MENU_HEIGHT = 640, 420
 WIDTH, HEIGHT = MENU_WIDTH, MENU_HEIGHT
-BOARD = 704
-CELL = 44
+BOARD = 640
+CELL = 40
 GRID = 16
 FPS = 60
-BOARD_X, BOARD_Y = (GAME_WIDTH - BOARD) // 2, (GAME_HEIGHT - BOARD) // 2
+BOARD_X, BOARD_Y = 40, (GAME_HEIGHT - BOARD) // 2
 FOOD_COUNT = 4
 FOOD_LIFETIME = 8.0
 PROGRESS_FILE = os.path.join(os.path.expanduser("~"), ".snakerson_progress.json")
@@ -46,27 +46,30 @@ LEVELS = [
     {"color": "WHITE", "speed": 2.0, "target": 10, "time": 90, "obstacles": [(6, 2), (7, 2), (8, 2), (9, 2), (6, 13), (7, 13), (8, 13), (9, 13), (2, 4), (2, 5), (13, 10), (13, 11), (2, 11), (13, 4), (4, 2), (4, 3), (4, 4), (4, 5), (11, 10), (11, 11), (11, 12), (11, 13), (9, 4), (10, 4), (2, 11), (3, 11), (7, 2), (8, 13), (2, 2), (13, 2), (2, 13), (13, 13), (8, 5), (7, 10)], "cycle": ["WHITE", "MAGENTA", "YELLOW", "GREEN"]},
 ]
 
-ADDITIONAL_OBSTACLES = [
-    [(3, 3), (12, 12)],
-    [(6, 3), (9, 12)],
-    [(3, 12), (12, 3)],
-    [(7, 3), (8, 12)],
-    [(3, 7), (12, 8)],
-    [(6, 7), (9, 8)],
-    [(3, 3), (12, 12)],
-]
+OBSTACLE_COUNTS = [0, 4, 8, 16, 32, 64, 96]
 
 
 def expand_obstacles(level_index, obstacles):
-    """Convierte cada punto de obstaculo en una barrera de tres bloques."""
-    anchors = list(obstacles) + ADDITIONAL_OBSTACLES[level_index]
-    expanded = set()
-    for x, y in anchors:
-        candidates = [(x, y), (x + 1, y), (x + 2, y)]
-        if x + 2 >= GRID:
-            candidates = [(x, y), (x - 1, y), (x - 2, y)]
-        expanded.update(cell for cell in candidates if 0 <= cell[0] < GRID and 0 <= cell[1] < GRID)
-    return sorted(expanded)
+    """Genera obstaculos dispersos, duplicando la dificultad por nivel."""
+    target = OBSTACLE_COUNTS[level_index]
+    if target == 0:
+        return []
+    generator = random.Random(1200 + level_index)
+    candidates = [(x, y) for y in range(1, GRID - 1) for x in range(1, GRID - 1) if not (x <= 4 and 7 <= y <= 9)]
+    generator.shuffle(candidates)
+    selected = set()
+    for cell in candidates:
+        if any(abs(cell[0] - other[0]) + abs(cell[1] - other[1]) <= 1 for other in selected):
+            continue
+        selected.add(cell)
+        if len(selected) >= target:
+            break
+    if len(selected) < target:
+        for cell in candidates:
+            selected.add(cell)
+            if len(selected) >= target:
+                break
+    return sorted(selected)
 
 
 for level_index, level in enumerate(LEVELS):
@@ -141,6 +144,7 @@ class Game:
         self.font_heading = pygame.font.SysFont("segoeuisemibold", 32)
         self.font_body = pygame.font.SysFont("segoeui", 22)
         self.font_small = pygame.font.SysFont("segoeui", 17)
+        self.font_timer = pygame.font.SysFont("segoeuisemibold", 12)
         self.progress = load_progress()
         initialize_database()
         self.state = "menu"
@@ -216,17 +220,20 @@ class Game:
             if key in (pygame.K_RETURN, pygame.K_SPACE):
                 self.start_level(self.selected_level)
             elif key == pygame.K_1:
+                self.resize_window(GAME_WIDTH, GAME_HEIGHT)
                 self.state = "levels"
             elif key == pygame.K_2:
+                self.resize_window(GAME_WIDTH, GAME_HEIGHT)
                 self.state = "howto"
             elif key == pygame.K_3:
                 self.start_free_mode()
             elif key == pygame.K_4:
+                self.resize_window(GAME_WIDTH, GAME_HEIGHT)
                 self.state = "stats"
             elif key == pygame.K_ESCAPE:
                 self.running = False
         elif self.state in ("levels", "howto", "stats", "result") and key == pygame.K_ESCAPE:
-            self.state = "menu"
+            self.show_menu()
 
     def click(self, position):
         x, y = position
@@ -236,10 +243,13 @@ class Game:
             elif pygame.Rect(330, 126, 290, 42).collidepoint(position):
                 self.start_free_mode()
             elif pygame.Rect(330, 174, 290, 42).collidepoint(position):
+                self.resize_window(GAME_WIDTH, GAME_HEIGHT)
                 self.state = "levels"
             elif pygame.Rect(330, 222, 290, 42).collidepoint(position):
+                self.resize_window(GAME_WIDTH, GAME_HEIGHT)
                 self.state = "stats"
             elif pygame.Rect(330, 270, 290, 42).collidepoint(position):
+                self.resize_window(GAME_WIDTH, GAME_HEIGHT)
                 self.state = "howto"
             elif pygame.Rect(330, 318, 290, 42).collidepoint(position):
                 self.running = False
@@ -251,21 +261,21 @@ class Game:
                     self.selected_level = index + 1
                     self.start_level(self.selected_level)
                     return
-            if pygame.Rect(40, 760, 190, 54).collidepoint(position):
-                self.state = "menu"
-        elif self.state == "howto" and pygame.Rect(40, 760, 190, 54).collidepoint(position):
-            self.state = "menu"
-        elif self.state == "stats" and pygame.Rect(40, 760, 190, 54).collidepoint(position):
-            self.state = "menu"
+            if pygame.Rect(40, 650, 190, 54).collidepoint(position):
+                self.show_menu()
+        elif self.state == "howto" and pygame.Rect(40, 650, 190, 54).collidepoint(position):
+            self.show_menu()
+        elif self.state == "stats" and pygame.Rect(40, 650, 190, 54).collidepoint(position):
+            self.show_menu()
         elif self.state == "result":
-            if pygame.Rect(200, 500, 400, 56).collidepoint(position):
+            if pygame.Rect(440, 450, 400, 56).collidepoint(position):
                 if self.mode == "free":
                     self.start_free_mode()
                 else:
                     self.start_level(self.level_id)
-            elif pygame.Rect(200, 565, 400, 56).collidepoint(position):
+            elif pygame.Rect(440, 515, 400, 56).collidepoint(position):
                 self.show_menu()
-            elif self.next_level and pygame.Rect(200, 630, 400, 56).collidepoint(position):
+            elif self.next_level and pygame.Rect(440, 580, 400, 56).collidepoint(position):
                 self.start_level(self.next_level)
 
     def start_level(self, level_id):
@@ -467,7 +477,7 @@ class Game:
             self.text(f"{level['target']} alimentos", self.font_small, WHITE, (rect.x + 16, rect.y + 65))
             self.text(f"Velocidad {level['speed']:.2f}x", self.font_small, MUTED, (rect.x + 16, rect.y + 92))
             self.text(f"{len(level['obstacles'])} bloques", self.font_small, MUTED, (rect.x + 16, rect.y + 113))
-        self.button(pygame.Rect(40, 760, 190, 54), "VOLVER", MUTED)
+        self.button(pygame.Rect(40, 650, 190, 54), "VOLVER", MUTED)
 
     def draw_howto(self):
         self.text("COMO JUGAR", self.font_heading, GOLD, (40, 40))
@@ -475,7 +485,7 @@ class Game:
         for index, line in enumerate(lines):
             pygame.draw.circle(self.screen, GREEN, (65, 150 + index * 52), 5)
             self.text(line, self.font_body, WHITE, (85, 140 + index * 58))
-        self.button(pygame.Rect(40, 760, 190, 54), "VOLVER", MUTED)
+        self.button(pygame.Rect(40, 650, 190, 54), "VOLVER", MUTED)
 
     def draw_clock(self, center, seconds, color=GOLD, radius=18):
         pygame.draw.circle(self.screen, (8, 16, 24), center, radius + 3)
@@ -507,6 +517,8 @@ class Game:
             pygame.draw.circle(self.screen, (117, 82, 18), (center[0], center[1] + 2), int(15 * pulse))
             pygame.draw.circle(self.screen, food_color, center, int(11 * pulse))
             pygame.draw.arc(self.screen, WHITE, pygame.Rect(center[0] - 16, center[1] - 16, 32, 32), -1.57, -1.57 + 6.28 * food["time"] / FOOD_LIFETIME, 2)
+            timer_surface = self.font_timer.render(str(max(0, math.ceil(food["time"]))), True, BG)
+            self.screen.blit(timer_surface, timer_surface.get_rect(center=center))
         for index, (x, y) in enumerate(self.snake):
             rect = pygame.Rect(BOARD_X + x * CELL + 4, BOARD_Y + y * CELL + 4, CELL - 8, CELL - 8)
             base_color = COLORS[self.snake_color]
@@ -523,28 +535,31 @@ class Game:
             if index == 0:
                 pygame.draw.circle(self.screen, WHITE, (rect.centerx + (7 if self.direction == "right" else -7), rect.centery - 5), 3)
                 pygame.draw.circle(self.screen, WHITE, (rect.centerx + (7 if self.direction == "right" else -7), rect.centery + 5), 3)
-        hud = pygame.Surface((300, 142), pygame.SRCALPHA)
-        hud.fill((5, 12, 20, 190))
-        self.screen.blit(hud, (BOARD_X + BOARD - 320, BOARD_Y + 18))
-        hud_x = BOARD_X + BOARD - 300
+        panel_rect = pygame.Rect(720, 40, 520, 640)
+        pygame.draw.rect(self.screen, PANEL, panel_rect, border_radius=14)
+        pygame.draw.rect(self.screen, (45, 70, 88), panel_rect, 2, border_radius=14)
+        hud_x = 760
         title = "SNAKE FREE" if self.mode == "free" else f"NIVEL {self.level_id}"
         title_color = COLORS["CYAN"] if self.mode == "free" else COLORS[self.level["color"]]
-        self.text(title, self.font_heading, title_color, (hud_x, BOARD_Y + 30))
+        self.text(title, self.font_heading, title_color, (hud_x, 78))
         score = self.food_count * 10 * (self.level_id or 1)
-        self.text(f"Puntaje  {score}", self.font_body, WHITE, (hud_x, BOARD_Y + 72))
+        self.text(f"Puntaje  {score}", self.font_body, WHITE, (hud_x, 138))
         food_label = f"Comida  {self.food_count}"
         if self.mode == "free":
             food_label = f"Pantalla  {len(self.snake)}/{GRID * GRID}"
-        self.text(food_label, self.font_body, WHITE, (hud_x, BOARD_Y + 100))
+        self.text(food_label, self.font_body, WHITE, (hud_x, 180))
         if self.time_left is None:
-            self.text("Sin limite de nivel", self.font_small, GOLD, (hud_x + 148, BOARD_Y + 75))
+            self.text("Sin limite de nivel", self.font_small, GOLD, (hud_x, 225))
         else:
-            self.draw_clock((hud_x + 205, BOARD_Y + 116), self.time_left)
-        self.text("Alimentos: 8s cada uno", self.font_small, MUTED, (BOARD_X + 18, BOARD_Y + BOARD - 28))
+            self.text("Tiempo del nivel", self.font_small, MUTED, (hud_x, 225))
+            self.draw_clock((hud_x + 28, 275), self.time_left)
+        self.text("Cada alimento dura 8 segundos", self.font_small, MUTED, (hud_x, 330))
+        self.text("El numero dentro de cada comida", self.font_small, MUTED, (hud_x, 360))
+        self.text("muestra su tiempo restante", self.font_small, MUTED, (hud_x, 384))
         instruction = "PRESIONA UNA FLECHA" if not self.started else "Flechas / WASD"
         instruction_color = GOLD if not self.started else MUTED
-        self.text(instruction, self.font_small, instruction_color, (BOARD_X + 18, BOARD_Y + BOARD - 66))
-        self.text("ESC  volver al menu", self.font_small, MUTED, (BOARD_X + 18, BOARD_Y + BOARD - 38))
+        self.text(instruction, self.font_small, instruction_color, (hud_x, 580))
+        self.text("ESC  volver al menu", self.font_small, MUTED, (hud_x, 615))
 
     def draw_stats(self):
         total, wins, score, average, recent = database_summary()
@@ -565,24 +580,24 @@ class Game:
             self.text(result_label, self.font_small, GREEN if won else RED, (240, y))
             self.text(str(game_score), self.font_small, WHITE, (410, y))
             self.text(played_at.replace("T", " "), self.font_small, MUTED, (560, y))
-        self.button(pygame.Rect(40, 760, 190, 54), "VOLVER", MUTED)
+        self.button(pygame.Rect(40, 650, 190, 54), "VOLVER", MUTED)
 
     def draw_result(self):
         overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         overlay.fill((5, 9, 14, 185))
         self.screen.blit(overlay, (0, 0))
-        box = pygame.Rect(160, 75, 480, 650)
+        box = pygame.Rect(400, 30, 480, 660)
         pygame.draw.rect(self.screen, PANEL, box, border_radius=12)
         color = GREEN if self.result_won else RED
         result_title = "SNAKE FREE COMPLETADO" if self.result_won and self.mode == "free" else "NIVEL SUPERADO" if self.result_won else "GAME OVER"
-        self.text(result_title, self.font_heading, color, (190, 125))
-        self.text(self.result_reason, self.font_body, WHITE, (190, 195))
-        self.text(f"Alimentos: {self.food_count}", self.font_body, MUTED, (190, 245))
-        self.text(f"Puntaje: {self.score}", self.font_body, WHITE, (190, 285))
-        self.button(pygame.Rect(200, 500, 400, 56), "REPETIR PARTIDA", color)
-        self.button(pygame.Rect(200, 565, 400, 56), "MENU PRINCIPAL", PANEL_LIGHT)
+        self.text(result_title, self.font_heading, color, (430, 90))
+        self.text(self.result_reason, self.font_body, WHITE, (430, 160))
+        self.text(f"Alimentos: {self.food_count}", self.font_body, MUTED, (430, 210))
+        self.text(f"Puntaje: {self.score}", self.font_body, WHITE, (430, 250))
+        self.button(pygame.Rect(440, 450, 400, 56), "REPETIR PARTIDA", color)
+        self.button(pygame.Rect(440, 515, 400, 56), "MENU PRINCIPAL", PANEL_LIGHT)
         if self.next_level:
-            self.button(pygame.Rect(200, 630, 400, 56), "SIGUIENTE NIVEL", GOLD)
+            self.button(pygame.Rect(440, 580, 400, 56), "SIGUIENTE NIVEL", GOLD)
 
 
 def main():

@@ -7,5 +7,6 @@ __pycache__/
 *.sqlite3
 .vscode/*.log
 build/
-dist/
+dist/*
+!dist/Snakerson.exe
 *.spec

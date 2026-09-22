@@ -2,6 +2,15 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Ejecutar Snakerson",
+            "type": "shell",
+            "command": "${workspaceFolder}\\dist\\Snakerson.exe",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Sincronizar cambios con GitHub",
             "type": "shell",
             "command": "powershell.exe",

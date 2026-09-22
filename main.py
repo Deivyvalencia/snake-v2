@@ -1,6 +1,7 @@
 """Snakerson: Snake clasico para escritorio, implementado con Pygame."""
 
 import json
+import math
 import os
 import random
 import sqlite3
@@ -146,6 +147,8 @@ class Game:
         self.selected_level = 1
         self.running = True
         self.last_move = 0
+        self.animation_time = 0.0
+        self.hover_amount = {}
 
     def resize_window(self, width, height):
         global WIDTH, HEIGHT
@@ -165,15 +168,22 @@ class Game:
     def button(self, rect, label, accent=GREEN):
         mouse = pygame.mouse.get_pos()
         hovered = rect.collidepoint(mouse)
-        color = tuple(min(255, channel + 18) for channel in PANEL_LIGHT) if hovered else PANEL_LIGHT
-        pygame.draw.rect(self.screen, color, rect, border_radius=8)
-        pygame.draw.rect(self.screen, accent if hovered else (45, 70, 88), rect, 1, border_radius=8)
-        self.text(label, self.font_body, WHITE, rect.center, True)
+        target = 1.0 if hovered else 0.0
+        progress = self.hover_amount.get(label, 0.0)
+        progress += (target - progress) * 0.18
+        self.hover_amount[label] = progress
+        lift = int(progress * 3)
+        animated_rect = rect.move(0, -lift)
+        color = tuple(min(255, channel + int(18 * progress)) for channel in PANEL_LIGHT)
+        pygame.draw.rect(self.screen, color, animated_rect, border_radius=8)
+        pygame.draw.rect(self.screen, accent if progress > 0.05 else (45, 70, 88), animated_rect, 2 if hovered else 1, border_radius=8)
+        self.text(label, self.font_body, WHITE, animated_rect.center, True)
         return hovered
 
     def run(self):
         while self.running:
             dt = self.clock.tick(FPS) / 1000
+            self.animation_time += dt
             self.events()
             if self.state == "playing":
                 self.update(dt)
@@ -463,14 +473,22 @@ class Game:
             fx, fy = food["position"]
             center = (BOARD_X + fx * CELL + CELL // 2, BOARD_Y + fy * CELL + CELL // 2)
             food_color = RED if food["time"] <= 3 else GOLD
-            pygame.draw.circle(self.screen, (117, 82, 18), (center[0], center[1] + 2), 15)
-            pygame.draw.circle(self.screen, food_color, center, 11)
+            pulse = 1.0 + 0.14 * math.sin(self.animation_time * 5.0 + fx + fy)
+            glow_radius = int(18 * pulse)
+            glow = pygame.Surface((glow_radius * 2 + 8, glow_radius * 2 + 8), pygame.SRCALPHA)
+            pygame.draw.circle(glow, (*food_color, 38), (glow.get_width() // 2, glow.get_height() // 2), glow_radius)
+            self.screen.blit(glow, (center[0] - glow.get_width() // 2, center[1] - glow.get_height() // 2))
+            pygame.draw.circle(self.screen, (117, 82, 18), (center[0], center[1] + 2), int(15 * pulse))
+            pygame.draw.circle(self.screen, food_color, center, int(11 * pulse))
             pygame.draw.arc(self.screen, WHITE, pygame.Rect(center[0] - 16, center[1] - 16, 32, 32), -1.57, -1.57 + 6.28 * food["time"] / FOOD_LIFETIME, 2)
         for index, (x, y) in enumerate(self.snake):
             rect = pygame.Rect(BOARD_X + x * CELL + 4, BOARD_Y + y * CELL + 4, CELL - 8, CELL - 8)
             base_color = COLORS[self.snake_color]
             dark_color = tuple(max(0, channel - 72) for channel in base_color)
             light_color = tuple(min(255, channel + 46) for channel in base_color)
+            if index == 0:
+                head_pulse = int(3 + 2 * math.sin(self.animation_time * 4.0))
+                pygame.draw.ellipse(self.screen, (*base_color, 55), rect.inflate(head_pulse * 2, head_pulse * 2))
             pygame.draw.ellipse(self.screen, (5, 12, 9), rect.move(3, 4))
             pygame.draw.ellipse(self.screen, dark_color, rect)
             pygame.draw.ellipse(self.screen, base_color, rect.inflate(-3, -3))

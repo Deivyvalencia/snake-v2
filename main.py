@@ -8,6 +8,7 @@ import sys
 from datetime import datetime
 import pygame
 
+os.environ.setdefault("SDL_VIDEO_CENTERED", "1")
 pygame.init()
 
 GAME_WIDTH, GAME_HEIGHT = 800, 800

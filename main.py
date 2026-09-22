@@ -10,9 +10,9 @@ import pygame
 
 pygame.init()
 
-WIDTH, HEIGHT = 1440, 920
-BOARD = 800
-CELL = 50
+WIDTH, HEIGHT = 1280, 840
+BOARD = 704
+CELL = 44
 GRID = 16
 FPS = 60
 BOARD_X, BOARD_Y = (WIDTH - BOARD) // 2, (HEIGHT - BOARD) // 2
@@ -209,17 +209,17 @@ class Game:
     def click(self, position):
         x, y = position
         if self.state == "menu":
-            if pygame.Rect(760, 245, 520, 64).collidepoint(position):
+            if pygame.Rect(620, 245, 560, 64).collidepoint(position):
                 self.start_level(self.selected_level)
-            elif pygame.Rect(760, 320, 520, 64).collidepoint(position):
+            elif pygame.Rect(620, 320, 560, 64).collidepoint(position):
                 self.start_free_mode()
-            elif pygame.Rect(760, 395, 520, 64).collidepoint(position):
+            elif pygame.Rect(620, 395, 560, 64).collidepoint(position):
                 self.state = "levels"
-            elif pygame.Rect(760, 470, 520, 64).collidepoint(position):
+            elif pygame.Rect(620, 470, 560, 64).collidepoint(position):
                 self.state = "stats"
-            elif pygame.Rect(760, 545, 520, 64).collidepoint(position):
+            elif pygame.Rect(620, 545, 560, 64).collidepoint(position):
                 self.state = "howto"
-            elif pygame.Rect(760, 620, 520, 64).collidepoint(position):
+            elif pygame.Rect(620, 620, 560, 64).collidepoint(position):
                 self.running = False
         elif self.state == "levels":
             for index in range(7):
@@ -236,14 +236,14 @@ class Game:
         elif self.state == "stats" and pygame.Rect(40, 760, 190, 54).collidepoint(position):
             self.state = "menu"
         elif self.state == "result":
-            if pygame.Rect(950, 500, 400, 56).collidepoint(position):
+            if pygame.Rect(790, 500, 400, 56).collidepoint(position):
                 if self.mode == "free":
                     self.start_free_mode()
                 else:
                     self.start_level(self.level_id)
-            elif pygame.Rect(950, 565, 400, 56).collidepoint(position):
+            elif pygame.Rect(790, 565, 400, 56).collidepoint(position):
                 self.state = "menu"
-            elif self.next_level and pygame.Rect(950, 630, 400, 56).collidepoint(position):
+            elif self.next_level and pygame.Rect(790, 630, 400, 56).collidepoint(position):
                 self.start_level(self.next_level)
 
     def start_level(self, level_id):
@@ -387,23 +387,23 @@ class Game:
         random.seed()
 
     def draw_menu(self):
-        pygame.draw.rect(self.screen, (14, 28, 39), (100, 40, 580, 760), border_radius=12)
-        self.text("SNAKERSON", self.font_title, GREEN, (140, 82))
-        self.text("SNAKE ESPACIAL  /  7 NIVELES", self.font_small, MUTED, (144, 155))
+        pygame.draw.rect(self.screen, (14, 28, 39), (60, 40, 520, 760), border_radius=12)
+        self.text("SNAKERSON", self.font_title, GREEN, (100, 82))
+        self.text("SNAKE ESPACIAL  /  7 NIVELES", self.font_small, MUTED, (104, 155))
         for index, (x, y) in enumerate([(100, 470), (140, 470), (180, 470), (220, 470), (260, 470), (300, 430), (340, 390), (380, 350)]):
             pygame.draw.circle(self.screen, (35, 137, 85), (x, y), 14 if index < 7 else 17)
         pygame.draw.circle(self.screen, BG, (388, 342), 3)
-        self.text("COME  /  CRECE  /  EVOLUCIONA", self.font_small, MUTED, (140, 700))
-        self.text("Tu partida", self.font_small, MUTED, (760, 82))
-        self.text("7 niveles disponibles", self.font_heading, WHITE, (760, 120))
-        self.text("Cada nivel aumenta velocidad y obstaculos", self.font_small, MUTED, (760, 170))
-        self.button(pygame.Rect(760, 245, 520, 64), "JUGAR AHORA", GREEN)
-        self.button(pygame.Rect(760, 320, 520, 64), "SNAKE FREE", COLORS["CYAN"])
-        self.button(pygame.Rect(760, 395, 520, 64), "SELECCIONAR NIVEL", COLORS["CYAN"])
-        self.button(pygame.Rect(760, 470, 520, 64), "DESEMPENO Y PARTIDAS", GOLD)
-        self.button(pygame.Rect(760, 545, 520, 64), "COMO JUGAR", GOLD)
-        self.button(pygame.Rect(760, 620, 520, 64), "SALIR", RED)
-        self.text("ENTER: jugar  |  3: Snake Free  |  ESC: salir", self.font_small, MUTED, (760, 745))
+        self.text("COME  /  CRECE  /  EVOLUCIONA", self.font_small, MUTED, (100, 700))
+        self.text("Tu partida", self.font_small, MUTED, (620, 82))
+        self.text("7 niveles disponibles", self.font_heading, WHITE, (620, 120))
+        self.text("Cada nivel aumenta velocidad y obstaculos", self.font_small, MUTED, (620, 170))
+        self.button(pygame.Rect(620, 245, 560, 64), "JUGAR AHORA", GREEN)
+        self.button(pygame.Rect(620, 320, 560, 64), "SNAKE FREE", COLORS["CYAN"])
+        self.button(pygame.Rect(620, 395, 560, 64), "SELECCIONAR NIVEL", COLORS["CYAN"])
+        self.button(pygame.Rect(620, 470, 560, 64), "DESEMPENO Y PARTIDAS", GOLD)
+        self.button(pygame.Rect(620, 545, 560, 64), "COMO JUGAR", GOLD)
+        self.button(pygame.Rect(620, 620, 560, 64), "SALIR", RED)
+        self.text("ENTER: jugar  |  3: Snake Free  |  ESC: salir", self.font_small, MUTED, (620, 745))
 
     def draw_levels(self):
         self.text("SELECCION DE NIVEL", self.font_heading, WHITE, (40, 40))
@@ -514,18 +514,18 @@ class Game:
         overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         overlay.fill((5, 9, 14, 185))
         self.screen.blit(overlay, (0, 0))
-        box = pygame.Rect(900, 120, 500, 650)
+        box = pygame.Rect(740, 100, 480, 650)
         pygame.draw.rect(self.screen, PANEL, box, border_radius=12)
         color = GREEN if self.result_won else RED
         result_title = "SNAKE FREE COMPLETADO" if self.result_won and self.mode == "free" else "NIVEL SUPERADO" if self.result_won else "GAME OVER"
-        self.text(result_title, self.font_heading, color, (940, 170))
-        self.text(self.result_reason, self.font_body, WHITE, (940, 240))
-        self.text(f"Alimentos: {self.food_count}", self.font_body, MUTED, (940, 290))
-        self.text(f"Puntaje: {self.score}", self.font_body, WHITE, (940, 330))
-        self.button(pygame.Rect(950, 500, 400, 56), "REPETIR PARTIDA", color)
-        self.button(pygame.Rect(950, 565, 400, 56), "MENU PRINCIPAL", PANEL_LIGHT)
+        self.text(result_title, self.font_heading, color, (770, 150))
+        self.text(self.result_reason, self.font_body, WHITE, (770, 220))
+        self.text(f"Alimentos: {self.food_count}", self.font_body, MUTED, (770, 270))
+        self.text(f"Puntaje: {self.score}", self.font_body, WHITE, (770, 310))
+        self.button(pygame.Rect(790, 500, 400, 56), "REPETIR PARTIDA", color)
+        self.button(pygame.Rect(790, 565, 400, 56), "MENU PRINCIPAL", PANEL_LIGHT)
         if self.next_level:
-            self.button(pygame.Rect(950, 630, 400, 56), "SIGUIENTE NIVEL", GOLD)
+            self.button(pygame.Rect(790, 630, 400, 56), "SIGUIENTE NIVEL", GOLD)
 
 
 def main():

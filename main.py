@@ -412,11 +412,8 @@ class Game:
 
     def draw_menu(self):
         pygame.draw.rect(self.screen, (14, 28, 39), (18, 18, 290, 384), border_radius=12)
-        self.text("SNAKERSON", self.font_heading, GREEN, (38, 42))
+        self.draw_animated_logo()
         self.text("SNAKE / 7 NIVELES", self.font_small, MUTED, (40, 82))
-        for index, (x, y) in enumerate([(45, 265), (75, 265), (105, 265), (135, 265), (165, 265), (195, 235), (225, 205), (255, 175)]):
-            pygame.draw.circle(self.screen, (35, 137, 85), (x, y), 9 if index < 7 else 11)
-        pygame.draw.circle(self.screen, BG, (260, 170), 2)
         self.text("COME / CRECE / EVOLUCIONA", self.font_small, MUTED, (38, 360))
         self.text("Tu partida", self.font_small, MUTED, (330, 30))
         self.text("7 niveles disponibles", self.font_body, WHITE, (330, 48))
@@ -427,6 +424,28 @@ class Game:
         self.button(pygame.Rect(330, 270, 290, 42), "COMO JUGAR", GOLD)
         self.button(pygame.Rect(330, 318, 290, 42), "SALIR", RED)
         self.text("ENTER jugar | 3 Snake Free | ESC salir", self.font_small, MUTED, (330, 382))
+
+    def draw_animated_logo(self):
+        """Anima la serpiente hasta convertirla en la S del nombre."""
+        self.text("NAKERSON", self.font_heading, GREEN, (66, 42))
+        phase = (self.animation_time % 4.2) / 4.2
+        if phase < 0.72:
+            progress = phase / 0.72
+            start_x, start_y = 45, 265
+            target_x, target_y = 43, 57
+            offset_x = start_x + (target_x - start_x) * progress
+            offset_y = start_y + (target_y - start_y) * progress
+        else:
+            offset_x, offset_y = 43, 57
+        points = [(offset_x + 14, offset_y + 24), (offset_x + 28, offset_y + 24), (offset_x + 42, offset_y + 24), (offset_x + 56, offset_y + 18), (offset_x + 66, offset_y + 6)]
+        for index, (x, y) in enumerate(points):
+            radius = 12 if index == len(points) - 1 else 9
+            pulse = 1.0 + 0.06 * math.sin(self.animation_time * 4.0 + index)
+            pygame.draw.circle(self.screen, (12, 52, 35), (int(x + 2), int(y + 3)), int(radius * pulse))
+            pygame.draw.circle(self.screen, (35, 137, 85), (int(x), int(y)), int(radius * pulse))
+        head_x, head_y = points[-1]
+        pygame.draw.circle(self.screen, WHITE, (int(head_x + 4), int(head_y - 3)), 2)
+        pygame.draw.circle(self.screen, WHITE, (int(head_x + 4), int(head_y + 3)), 2)
 
     def draw_levels(self):
         self.text("SELECCION DE NIVEL", self.font_heading, WHITE, (40, 40))

@@ -426,18 +426,25 @@ class Game:
         self.text("ENTER jugar | 3 Snake Free | ESC salir", self.font_small, MUTED, (330, 382))
 
     def draw_animated_logo(self):
-        """Anima la serpiente hasta convertirla en la S del nombre."""
+        """Desplaza la serpiente con una pausa breve y una ruta ondulada."""
         self.text("NAKERSON", self.font_heading, GREEN, (66, 42))
-        phase = (self.animation_time % 4.2) / 4.2
-        if phase < 0.72:
-            progress = phase / 0.72
-            start_x, start_y = 45, 265
-            target_x, target_y = 43, 57
-            offset_x = start_x + (target_x - start_x) * progress
-            offset_y = start_y + (target_y - start_y) * progress
+        delay = 0.35
+        travel_time = 2.2
+        cycle = delay + travel_time + 1.0
+        elapsed = self.animation_time % cycle
+        if elapsed < delay:
+            progress = 0.0
         else:
-            offset_x, offset_y = 43, 57
-        points = [(offset_x + 14, offset_y + 24), (offset_x + 28, offset_y + 24), (offset_x + 42, offset_y + 24), (offset_x + 56, offset_y + 18), (offset_x + 66, offset_y + 6)]
+            progress = min(1.0, (elapsed - delay) / travel_time)
+        waypoints = [(42, 112), (88, 102), (134, 116), (180, 102), (226, 112)]
+        route_position = progress * (len(waypoints) - 1)
+        route_index = min(int(route_position), len(waypoints) - 2)
+        route_fraction = route_position - route_index
+        start_x, start_y = waypoints[route_index]
+        end_x, end_y = waypoints[route_index + 1]
+        offset_x = start_x + (end_x - start_x) * route_fraction
+        offset_y = start_y + (end_y - start_y) * route_fraction
+        points = [(offset_x + 14, offset_y), (offset_x + 28, offset_y - 5), (offset_x + 42, offset_y), (offset_x + 56, offset_y + 5), (offset_x + 68, offset_y)]
         for index, (x, y) in enumerate(points):
             radius = 12 if index == len(points) - 1 else 9
             pulse = 1.0 + 0.06 * math.sin(self.animation_time * 4.0 + index)

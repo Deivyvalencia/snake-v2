@@ -10,11 +10,14 @@ import pygame
 
 pygame.init()
 
-WIDTH, HEIGHT = 960, 680
-BOARD = 512
-CELL = 32
+WIDTH, HEIGHT = 1280, 840
+BOARD = 704
+CELL = 44
 GRID = 16
 FPS = 60
+BOARD_X, BOARD_Y = 32, 78
+FOOD_COUNT = 4
+FOOD_LIFETIME = 8.0
 PROGRESS_FILE = os.path.join(os.path.expanduser("~"), ".snakerson_progress.json")
 DATABASE_FILE = os.path.join(os.path.expanduser("~"), ".snakerson_stats.db")
 
@@ -254,7 +257,7 @@ class Game:
         self.color_index = 0
         self.snake_color = self.level["cycle"][0]
         self.time_left = float(self.level["time"])
-        self.food = self.spawn_food()
+        self.foods = self.spawn_foods()
         self.state = "playing"
         self.last_move = 0
         self.started = False
@@ -270,14 +273,28 @@ class Game:
         self.color_index = 0
         self.snake_color = self.level["cycle"][0]
         self.time_left = None
-        self.food = self.spawn_food()
+        self.foods = self.spawn_foods()
         self.state = "playing"
         self.last_move = 0
         self.started = False
 
     def spawn_food(self):
-        free = [(x, y) for x in range(GRID) for y in range(GRID) if (x, y) not in self.snake and (x, y) not in self.obstacles]
+        occupied_food = {item["position"] for item in getattr(self, "foods", [])}
+        free = [(x, y) for x in range(GRID) for y in range(GRID) if (x, y) not in self.snake and (x, y) not in self.obstacles and (x, y) not in occupied_food]
         return random.choice(free)
+
+    def spawn_foods(self):
+        self.foods = []
+        for _ in range(FOOD_COUNT):
+            self.foods.append({"position": self.spawn_food(), "time": FOOD_LIFETIME})
+        return self.foods
+
+    def refill_foods(self):
+        while len(self.foods) < FOOD_COUNT:
+            free = [(x, y) for x in range(GRID) for y in range(GRID) if (x, y) not in self.snake and (x, y) not in self.obstacles and all(item["position"] != (x, y) for item in self.foods)]
+            if not free:
+                return
+            self.foods.append({"position": random.choice(free), "time": FOOD_LIFETIME})
 
     def update(self, dt):
         if not self.started:
@@ -287,6 +304,10 @@ class Game:
             if self.time_left <= 0:
                 self.finish(False, "Se acabo el tiempo")
                 return
+        for food in self.foods:
+            food["time"] -= dt
+        self.foods = [food for food in self.foods if food["time"] > 0]
+        self.refill_foods()
         self.last_move += dt
         interval = 0.22 / self.level["speed"]
         if self.last_move < interval:
@@ -296,7 +317,8 @@ class Game:
         dx, dy = DIRECTIONS[self.direction]
         head = self.snake[0]
         new_head = (head[0] + dx, head[1] + dy)
-        eating = new_head == self.food
+        eaten_food = next((food for food in self.foods if food["position"] == new_head), None)
+        eating = eaten_food is not None
         body = self.snake if eating else self.snake[:-1]
         outside = not (0 <= new_head[0] < GRID and 0 <= new_head[1] < GRID)
         if outside or new_head in body or new_head in self.obstacles:
@@ -304,6 +326,7 @@ class Game:
             return
         self.snake.insert(0, new_head)
         if eating:
+            self.foods.remove(eaten_food)
             self.food_count += 1
             if self.food_count % 3 == 0:
                 self.color_index = (self.color_index + 1) % len(self.level["cycle"])
@@ -314,7 +337,7 @@ class Game:
             if self.mode == "levels" and self.food_count >= self.level["target"]:
                 self.finish(True, "Nivel superado")
                 return
-            self.food = self.spawn_food()
+            self.refill_foods()
         else:
             self.snake.pop()
 
@@ -328,7 +351,7 @@ class Game:
         record_game(self.mode, self.level_id, won, self.score, self.food_count, duration, reason)
         self.result_won = won
         self.result_reason = reason
-        self.next_level = self.level_id + 1 if won and self.level_id < len(LEVELS) else None
+        self.next_level = self.level_id + 1 if won and self.mode == "levels" and self.level_id < len(LEVELS) else None
         self.state = "result"
 
     def draw(self):
@@ -404,22 +427,33 @@ class Game:
             self.text(line, self.font_body, WHITE, (85, 140 + index * 52))
         self.button(pygame.Rect(40, 590, 150, 45), "VOLVER", MUTED)
 
+    def draw_clock(self, center, seconds, color=GOLD, radius=18):
+        pygame.draw.circle(self.screen, (8, 16, 24), center, radius + 3)
+        pygame.draw.circle(self.screen, color, center, radius, 2)
+        pygame.draw.line(self.screen, color, center, (center[0], center[1] - radius + 6), 3)
+        pygame.draw.line(self.screen, color, center, (center[0] + 8, center[1] + 5), 3)
+        self.text(f"{max(0, int(seconds))}s", self.font_small, WHITE, (center[0] + radius + 8, center[1] - 8))
+
     def draw_game(self):
-        board_rect = pygame.Rect(40, 84, BOARD, BOARD)
+        board_rect = pygame.Rect(BOARD_X, BOARD_Y, BOARD, BOARD)
         pygame.draw.rect(self.screen, (16, 31, 41), board_rect)
         for x in range(GRID + 1):
-            pygame.draw.line(self.screen, GRID_COLOR, (40 + x * CELL, 84), (40 + x * CELL, 84 + BOARD))
+            pygame.draw.line(self.screen, GRID_COLOR, (BOARD_X + x * CELL, BOARD_Y), (BOARD_X + x * CELL, BOARD_Y + BOARD))
         for y in range(GRID + 1):
-            pygame.draw.line(self.screen, GRID_COLOR, (40, 84 + y * CELL), (40 + BOARD, 84 + y * CELL))
+            pygame.draw.line(self.screen, GRID_COLOR, (BOARD_X, BOARD_Y + y * CELL), (BOARD_X + BOARD, BOARD_Y + y * CELL))
         for x, y in self.obstacles:
-            rect = pygame.Rect(40 + x * CELL + 4, 84 + y * CELL + 4, CELL - 8, CELL - 8)
+            rect = pygame.Rect(BOARD_X + x * CELL + 5, BOARD_Y + y * CELL + 5, CELL - 10, CELL - 10)
             pygame.draw.rect(self.screen, (90, 108, 121), rect, border_radius=5)
             pygame.draw.line(self.screen, (185, 199, 208), rect.topleft, (rect.right - 4, rect.top), 2)
-        fx, fy = self.food
-        pygame.draw.circle(self.screen, (117, 82, 18), (40 + fx * CELL + 16, 84 + fy * CELL + 17), 12)
-        pygame.draw.circle(self.screen, GOLD, (40 + fx * CELL + 16, 84 + fy * CELL + 15), 9)
+        for food in self.foods:
+            fx, fy = food["position"]
+            center = (BOARD_X + fx * CELL + CELL // 2, BOARD_Y + fy * CELL + CELL // 2)
+            food_color = RED if food["time"] <= 3 else GOLD
+            pygame.draw.circle(self.screen, (117, 82, 18), (center[0], center[1] + 2), 15)
+            pygame.draw.circle(self.screen, food_color, center, 11)
+            pygame.draw.arc(self.screen, WHITE, pygame.Rect(center[0] - 16, center[1] - 16, 32, 32), -1.57, -1.57 + 6.28 * food["time"] / FOOD_LIFETIME, 2)
         for index, (x, y) in enumerate(self.snake):
-            rect = pygame.Rect(40 + x * CELL + 3, 84 + y * CELL + 3, CELL - 6, CELL - 6)
+            rect = pygame.Rect(BOARD_X + x * CELL + 4, BOARD_Y + y * CELL + 4, CELL - 8, CELL - 8)
             base_color = COLORS[self.snake_color]
             dark_color = tuple(max(0, channel - 72) for channel in base_color)
             light_color = tuple(min(255, channel + 46) for channel in base_color)
@@ -431,20 +465,28 @@ class Game:
             if index == 0:
                 pygame.draw.circle(self.screen, WHITE, (rect.centerx + (7 if self.direction == "right" else -7), rect.centery - 5), 3)
                 pygame.draw.circle(self.screen, WHITE, (rect.centerx + (7 if self.direction == "right" else -7), rect.centery + 5), 3)
+        hud = pygame.Surface((300, 142), pygame.SRCALPHA)
+        hud.fill((5, 12, 20, 190))
+        self.screen.blit(hud, (BOARD_X + BOARD - 320, BOARD_Y + 18))
+        hud_x = BOARD_X + BOARD - 300
+        title = "SNAKE FREE" if self.mode == "free" else f"NIVEL {self.level_id}"
+        title_color = COLORS["CYAN"] if self.mode == "free" else COLORS[self.level["color"]]
+        self.text(title, self.font_heading, title_color, (hud_x, BOARD_Y + 30))
+        score = self.food_count * 10 * (self.level_id or 1)
+        self.text(f"Puntaje  {score}", self.font_body, WHITE, (hud_x, BOARD_Y + 72))
+        food_label = f"Comida  {self.food_count}"
         if self.mode == "free":
-            self.text("SNAKE FREE", self.font_heading, COLORS["CYAN"], (590, 85))
-            self.text(f"Pantalla  {len(self.snake)}/{GRID * GRID}", self.font_body, WHITE, (590, 150))
-            self.text("Sin limite de tiempo", self.font_body, GOLD, (590, 185))
-            self.text(f"Puntaje  {self.food_count * 10}", self.font_body, WHITE, (590, 220))
+            food_label = f"Pantalla  {len(self.snake)}/{GRID * GRID}"
+        self.text(food_label, self.font_body, WHITE, (hud_x, BOARD_Y + 100))
+        if self.time_left is None:
+            self.text("Sin limite de nivel", self.font_small, GOLD, (hud_x + 148, BOARD_Y + 75))
         else:
-            self.text(f"NIVEL {self.level_id}", self.font_heading, COLORS[self.level["color"]], (590, 85))
-            self.text(f"Alimentos  {self.food_count}/{self.level['target']}", self.font_body, WHITE, (590, 150))
-            self.text(f"Tiempo  {max(0, int(self.time_left))}s", self.font_body, GOLD, (590, 185))
-            self.text(f"Puntaje  {self.food_count * 10 * self.level_id}", self.font_body, WHITE, (590, 220))
+            self.draw_clock((hud_x + 205, BOARD_Y + 116), self.time_left)
+        self.text("Alimentos: 8s cada uno", self.font_small, MUTED, (BOARD_X + 18, BOARD_Y + BOARD - 28))
         instruction = "PRESIONA UNA FLECHA" if not self.started else "Flechas / WASD"
         instruction_color = GOLD if not self.started else MUTED
-        self.text(instruction, self.font_small, instruction_color, (590, 550))
-        self.text("ESC  volver al menu", self.font_small, MUTED, (590, 575))
+        self.text(instruction, self.font_small, instruction_color, (BOARD_X + BOARD + 28, BOARD_Y + BOARD - 66))
+        self.text("ESC  volver al menu", self.font_small, MUTED, (BOARD_X + BOARD + 28, BOARD_Y + BOARD - 38))
 
     def draw_stats(self):
         total, wins, score, average, recent = database_summary()

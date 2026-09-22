@@ -10,7 +10,7 @@ import pygame
 
 pygame.init()
 
-GAME_WIDTH, GAME_HEIGHT = 1280, 840
+GAME_WIDTH, GAME_HEIGHT = 800, 800
 MENU_WIDTH, MENU_HEIGHT = 640, 420
 WIDTH, HEIGHT = MENU_WIDTH, MENU_HEIGHT
 BOARD = 704
@@ -247,14 +247,14 @@ class Game:
         elif self.state == "stats" and pygame.Rect(40, 760, 190, 54).collidepoint(position):
             self.state = "menu"
         elif self.state == "result":
-            if pygame.Rect(790, 500, 400, 56).collidepoint(position):
+            if pygame.Rect(200, 500, 400, 56).collidepoint(position):
                 if self.mode == "free":
                     self.start_free_mode()
                 else:
                     self.start_level(self.level_id)
-            elif pygame.Rect(790, 565, 400, 56).collidepoint(position):
+            elif pygame.Rect(200, 565, 400, 56).collidepoint(position):
                 self.show_menu()
-            elif self.next_level and pygame.Rect(790, 630, 400, 56).collidepoint(position):
+            elif self.next_level and pygame.Rect(200, 630, 400, 56).collidepoint(position):
                 self.start_level(self.next_level)
 
     def start_level(self, level_id):
@@ -498,8 +498,8 @@ class Game:
         self.text("Alimentos: 8s cada uno", self.font_small, MUTED, (BOARD_X + 18, BOARD_Y + BOARD - 28))
         instruction = "PRESIONA UNA FLECHA" if not self.started else "Flechas / WASD"
         instruction_color = GOLD if not self.started else MUTED
-        self.text(instruction, self.font_small, instruction_color, (BOARD_X + BOARD + 28, BOARD_Y + BOARD - 66))
-        self.text("ESC  volver al menu", self.font_small, MUTED, (BOARD_X + BOARD + 28, BOARD_Y + BOARD - 38))
+        self.text(instruction, self.font_small, instruction_color, (BOARD_X + 18, BOARD_Y + BOARD - 66))
+        self.text("ESC  volver al menu", self.font_small, MUTED, (BOARD_X + 18, BOARD_Y + BOARD - 38))
 
     def draw_stats(self):
         total, wins, score, average, recent = database_summary()
@@ -526,18 +526,18 @@ class Game:
         overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         overlay.fill((5, 9, 14, 185))
         self.screen.blit(overlay, (0, 0))
-        box = pygame.Rect(740, 100, 480, 650)
+        box = pygame.Rect(160, 75, 480, 650)
         pygame.draw.rect(self.screen, PANEL, box, border_radius=12)
         color = GREEN if self.result_won else RED
         result_title = "SNAKE FREE COMPLETADO" if self.result_won and self.mode == "free" else "NIVEL SUPERADO" if self.result_won else "GAME OVER"
-        self.text(result_title, self.font_heading, color, (770, 150))
-        self.text(self.result_reason, self.font_body, WHITE, (770, 220))
-        self.text(f"Alimentos: {self.food_count}", self.font_body, MUTED, (770, 270))
-        self.text(f"Puntaje: {self.score}", self.font_body, WHITE, (770, 310))
-        self.button(pygame.Rect(790, 500, 400, 56), "REPETIR PARTIDA", color)
-        self.button(pygame.Rect(790, 565, 400, 56), "MENU PRINCIPAL", PANEL_LIGHT)
+        self.text(result_title, self.font_heading, color, (190, 125))
+        self.text(self.result_reason, self.font_body, WHITE, (190, 195))
+        self.text(f"Alimentos: {self.food_count}", self.font_body, MUTED, (190, 245))
+        self.text(f"Puntaje: {self.score}", self.font_body, WHITE, (190, 285))
+        self.button(pygame.Rect(200, 500, 400, 56), "REPETIR PARTIDA", color)
+        self.button(pygame.Rect(200, 565, 400, 56), "MENU PRINCIPAL", PANEL_LIGHT)
         if self.next_level:
-            self.button(pygame.Rect(790, 630, 400, 56), "SIGUIENTE NIVEL", GOLD)
+            self.button(pygame.Rect(200, 630, 400, 56), "SIGUIENTE NIVEL", GOLD)
 
 
 def main():

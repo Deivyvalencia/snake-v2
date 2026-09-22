@@ -133,10 +133,10 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Snakerson - 7 niveles")
         self.clock = pygame.time.Clock()
-        self.font_title = pygame.font.SysFont("segoeuisemibold", 44)
-        self.font_heading = pygame.font.SysFont("segoeuisemibold", 26)
-        self.font_body = pygame.font.SysFont("segoeui", 18)
-        self.font_small = pygame.font.SysFont("segoeui", 14)
+        self.font_title = pygame.font.SysFont("segoeuisemibold", 56)
+        self.font_heading = pygame.font.SysFont("segoeuisemibold", 32)
+        self.font_body = pygame.font.SysFont("segoeui", 22)
+        self.font_small = pygame.font.SysFont("segoeui", 17)
         self.progress = load_progress()
         initialize_database()
         self.state = "menu"
@@ -209,31 +209,31 @@ class Game:
     def click(self, position):
         x, y = position
         if self.state == "menu":
-            if pygame.Rect(585, 250, 300, 52).collidepoint(position):
+            if pygame.Rect(720, 245, 440, 64).collidepoint(position):
                 self.start_level(self.selected_level)
-            elif pygame.Rect(585, 306, 300, 52).collidepoint(position):
+            elif pygame.Rect(720, 320, 440, 64).collidepoint(position):
                 self.start_free_mode()
-            elif pygame.Rect(585, 362, 300, 52).collidepoint(position):
+            elif pygame.Rect(720, 395, 440, 64).collidepoint(position):
                 self.state = "levels"
-            elif pygame.Rect(585, 418, 300, 52).collidepoint(position):
+            elif pygame.Rect(720, 470, 440, 64).collidepoint(position):
                 self.state = "stats"
-            elif pygame.Rect(585, 474, 300, 52).collidepoint(position):
+            elif pygame.Rect(720, 545, 440, 64).collidepoint(position):
                 self.state = "howto"
-            elif pygame.Rect(585, 530, 300, 52).collidepoint(position):
+            elif pygame.Rect(720, 620, 440, 64).collidepoint(position):
                 self.running = False
         elif self.state == "levels":
             for index in range(7):
                 col, row = index % 4, index // 4
-                rect = pygame.Rect(90 + col * 200, 180 + row * 150, 170, 105)
+                rect = pygame.Rect(70 + col * 285, 170 + row * 170, 250, 130)
                 if rect.collidepoint(position):
                     self.selected_level = index + 1
                     self.start_level(self.selected_level)
                     return
-            if pygame.Rect(40, 590, 150, 45).collidepoint(position):
+            if pygame.Rect(40, 760, 190, 54).collidepoint(position):
                 self.state = "menu"
-        elif self.state == "howto" and pygame.Rect(40, 590, 150, 45).collidepoint(position):
+        elif self.state == "howto" and pygame.Rect(40, 760, 190, 54).collidepoint(position):
             self.state = "menu"
-        elif self.state == "stats" and pygame.Rect(40, 590, 150, 45).collidepoint(position):
+        elif self.state == "stats" and pygame.Rect(40, 760, 190, 54).collidepoint(position):
             self.state = "menu"
         elif self.state == "result":
             if pygame.Rect(585, 420, 300, 48).collidepoint(position):
@@ -387,45 +387,46 @@ class Game:
         random.seed()
 
     def draw_menu(self):
-        pygame.draw.rect(self.screen, (14, 28, 39), (40, 40, 470, 600), border_radius=12)
+        pygame.draw.rect(self.screen, (14, 28, 39), (40, 40, 610, 760), border_radius=12)
         self.text("SNAKERSON", self.font_title, GREEN, (78, 82))
-        self.text("SNAKE ESPACIAL  /  7 NIVELES", self.font_small, MUTED, (82, 140))
+        self.text("SNAKE ESPACIAL  /  7 NIVELES", self.font_small, MUTED, (82, 155))
         for index, (x, y) in enumerate([(100, 470), (140, 470), (180, 470), (220, 470), (260, 470), (300, 430), (340, 390), (380, 350)]):
             pygame.draw.circle(self.screen, (35, 137, 85), (x, y), 14 if index < 7 else 17)
         pygame.draw.circle(self.screen, BG, (388, 342), 3)
-        self.text("COME  /  CRECE  /  EVOLUCIONA", self.font_small, MUTED, (78, 575))
-        self.text("Tu partida", self.font_small, MUTED, (585, 92))
-        self.text("7 niveles disponibles", self.font_heading, WHITE, (585, 120))
-        self.text("Cada nivel aumenta velocidad y obstaculos", self.font_small, MUTED, (585, 165))
-        self.button(pygame.Rect(585, 250, 300, 52), "JUGAR AHORA", GREEN)
-        self.button(pygame.Rect(585, 306, 300, 52), "SNAKE FREE", COLORS["CYAN"])
-        self.button(pygame.Rect(585, 362, 300, 52), "SELECCIONAR NIVEL", COLORS["CYAN"])
-        self.button(pygame.Rect(585, 418, 300, 52), "DESEMPENO Y PARTIDAS", GOLD)
-        self.button(pygame.Rect(585, 474, 300, 52), "COMO JUGAR", GOLD)
-        self.button(pygame.Rect(585, 530, 300, 52), "SALIR", RED)
-        self.text("ENTER: jugar  |  3: Snake Free  |  ESC: salir", self.font_small, MUTED, (585, 605))
+        self.text("COME  /  CRECE  /  EVOLUCIONA", self.font_small, MUTED, (78, 700))
+        self.text("Tu partida", self.font_small, MUTED, (720, 82))
+        self.text("7 niveles disponibles", self.font_heading, WHITE, (720, 120))
+        self.text("Cada nivel aumenta velocidad y obstaculos", self.font_small, MUTED, (720, 170))
+        self.button(pygame.Rect(720, 245, 440, 64), "JUGAR AHORA", GREEN)
+        self.button(pygame.Rect(720, 320, 440, 64), "SNAKE FREE", COLORS["CYAN"])
+        self.button(pygame.Rect(720, 395, 440, 64), "SELECCIONAR NIVEL", COLORS["CYAN"])
+        self.button(pygame.Rect(720, 470, 440, 64), "DESEMPENO Y PARTIDAS", GOLD)
+        self.button(pygame.Rect(720, 545, 440, 64), "COMO JUGAR", GOLD)
+        self.button(pygame.Rect(720, 620, 440, 64), "SALIR", RED)
+        self.text("ENTER: jugar  |  3: Snake Free  |  ESC: salir", self.font_small, MUTED, (720, 745))
 
     def draw_levels(self):
         self.text("SELECCION DE NIVEL", self.font_heading, WHITE, (40, 40))
         self.text("Todos los niveles estan disponibles desde el inicio.", self.font_body, MUTED, (40, 82))
         for index, level in enumerate(LEVELS):
             col, row = index % 4, index // 4
-            rect = pygame.Rect(90 + col * 200, 180 + row * 150, 170, 105)
+            rect = pygame.Rect(70 + col * 285, 170 + row * 170, 250, 130)
             color = COLORS[level["color"]]
             pygame.draw.rect(self.screen, PANEL, rect, border_radius=10)
             pygame.draw.rect(self.screen, color, rect, 2, border_radius=10)
             self.text(f"NIVEL {index + 1}", self.font_heading, color, (rect.x + 16, rect.y + 14))
-            self.text(f"{level['target']} alimentos", self.font_small, WHITE, (rect.x + 16, rect.y + 55))
-            self.text(f"Velocidad {level['speed']:.2f}x  |  {len(level['obstacles'])} bloques", self.font_small, MUTED, (rect.x + 16, rect.y + 78))
-        self.button(pygame.Rect(40, 590, 150, 45), "VOLVER", MUTED)
+            self.text(f"{level['target']} alimentos", self.font_small, WHITE, (rect.x + 16, rect.y + 65))
+            self.text(f"Velocidad {level['speed']:.2f}x", self.font_small, MUTED, (rect.x + 16, rect.y + 92))
+            self.text(f"{len(level['obstacles'])} bloques", self.font_small, MUTED, (rect.x + 16, rect.y + 113))
+        self.button(pygame.Rect(40, 760, 190, 54), "VOLVER", MUTED)
 
     def draw_howto(self):
         self.text("COMO JUGAR", self.font_heading, GOLD, (40, 40))
         lines = ["Flechas o W/A/S/D: mover la serpiente", "La serpiente avanza automaticamente por la cuadricula", "Come alimentos para crecer y sumar puntos", "Cada 3 alimentos, cambia el color de la serpiente", "Chocar contra borde, cuerpo u obstaculo termina la partida", "Completa el objetivo antes de que termine el tiempo", "Snake Free solo se gana al llenar toda la pantalla", "ESC: volver al menu durante una partida"]
         for index, line in enumerate(lines):
             pygame.draw.circle(self.screen, GREEN, (65, 150 + index * 52), 5)
-            self.text(line, self.font_body, WHITE, (85, 140 + index * 52))
-        self.button(pygame.Rect(40, 590, 150, 45), "VOLVER", MUTED)
+            self.text(line, self.font_body, WHITE, (85, 140 + index * 58))
+        self.button(pygame.Rect(40, 760, 190, 54), "VOLVER", MUTED)
 
     def draw_clock(self, center, seconds, color=GOLD, radius=18):
         pygame.draw.circle(self.screen, (8, 16, 24), center, radius + 3)
@@ -507,7 +508,7 @@ class Game:
             self.text(result_label, self.font_small, GREEN if won else RED, (240, y))
             self.text(str(game_score), self.font_small, WHITE, (410, y))
             self.text(played_at.replace("T", " "), self.font_small, MUTED, (560, y))
-        self.button(pygame.Rect(40, 590, 150, 45), "VOLVER", MUTED)
+        self.button(pygame.Rect(40, 760, 190, 54), "VOLVER", MUTED)
 
     def draw_result(self):
         overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
